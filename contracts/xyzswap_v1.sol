@@ -20,6 +20,9 @@ contract Xyzswap is ERC20 {
 
     address owner;
     uint256 lpAmount;
+    uint256 fee;
+    address token1;
+    address token2;
 
     error notApproved();
     error notOwner();
@@ -30,36 +33,49 @@ contract Xyzswap is ERC20 {
     error invalidAmount();
 
     //event for LP
-    event InitPool(address indexed _token1, uint256 _amount1, address indexed _token2, uint256 _amount2);
+    event AddLiquid(address indexed token1, uint256 _amount1, address indexed token2, uint256 _amount2);
+    event RemoveLiquid(uint256 indexed _amount);
+    event Swap(address indexed _token, uint256 indexed _amount);
 
     // events for owner
     event ChangeOwner(address indexed newOwner);
 
-    constructor() ERC20("Xyzswap Liquid Pair", "XYZLP") {
+    constructor(address _token1, address _token2, uint256 _fee) ERC20("Xyzswap Liquid Pair", "XYZLP") {
         owner = msg.sender;
+        token1 = _token1;
+        token2 = _token2;
+        fee = _fee;
         console.log("LP has been deployed!");
     }
 
-    function initPool(address _token1, uint256 _amount1, address _token2, uint256 _amount2) public {
-        if(Erc20Func(_token1).allowance(msg.sender, address(this)) < _amount1 || Erc20Func(_token2).allowance(msg.sender, address(this)) < _amount2){
+    function addLiquid(uint256 _amount1, uint256 _amount2) public {
+        if(Erc20Func(token1).allowance(msg.sender, address(this)) < _amount1 || Erc20Func(token2).allowance(msg.sender, address(this)) < _amount2){
             revert notApproved();
         }
-        lpAmount = _amount1 * _amount2;
-        Erc20Func(_token1).transfer(address(this), _amount1);
-        Erc20Func(_token2).transfer(address(this), _amount2);
+        lpAmount += _amount1 * _amount2;
+        Erc20Func(token1).transfer(address(this), _amount1);
+        Erc20Func(token2).transfer(address(this), _amount2);
         _mint(msg.sender, lpAmount);
+
+        emit AddLiquid(token1, _amount1, token2, _amount2);
     }
 
-    function addLiquid(address _token1, uint256 amount) public {
+    function removeLiquid(uint256 _amount) public {
+        uint256 _bal1 = Erc20Func(token1).balanceOf(address(this));
+        uint256 _bal2 = Erc20Func(token2).balanceOf(address(this));
+        uint256 _val1 = _amount * _bal1 / (_bal1 + _bal2);
+        uint256 _val2 = _amount - _val1;
+        Erc20Func(token1).transferFrom(address(this), msg.sender, _val1);
+        Erc20Func(token2).transferFrom(address(this), msg.sender, _val2);
+        _burn(msg.sender, _amount);
 
+        emit RemoveLiquid(_amount);
     }
 
-    function removeLiquid() public {
+    function swap(address _token, uint256 _amount) public {
+        address _other = (_token == token1 ? token1 : token2);
 
-    }
-
-    function swap() public {
-
+        emit Swap(_token, _amount);
     }
 
     /******************************************************************************************************
@@ -67,6 +83,10 @@ contract Xyzswap is ERC20 {
     *                                      Owner's Function                                               *
     *                                                                                                     *
     *******************************************************************************************************/
+
+    function setFee(uint256 _fee) public onlyOwner {
+        fee = _fee;
+    }
 
     function withdraw() onlyOwner public {
         payable(msg.sender).transfer(address(this).balance);

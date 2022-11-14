@@ -16,7 +16,7 @@ const main = async () => {
     const approve1 = await TT1Contra.approve(dexContra.address, 10000);
     const approve2 = await TT2Contra.approve(dexContra.address, 10000);
 
-    const _init = await dexContra.initPool(TT1Contra.address, 5000, TT2Contra.address, 5000);
+    const _init = await dexContra.addliquid(TT1Contra.address, 5000, TT2Contra.address, 5000);
     console.log("The lp amount now is", await dexContra.balanceOf(guy.address));
 }
 
