@@ -1,4 +1,6 @@
 const main = async () => {
+    const [guy, randomGuy] = await hre.ethers.getSigners();
+
     const TT1Fac = await hre.ethers.getContractFactory("TestToken1");
     const TT1Contra = await TT1Fac.deploy();
     console.log("TT1 has been deployed to", TT1Contra.address);
@@ -10,6 +12,12 @@ const main = async () => {
     const dexFac = await hre.ethers.getContractFactory("Xyzswap");
     const dexContra = await dexFac.deploy();
     console.log("Dex has been deployed to", dexContra.address);
+
+    const approve1 = await TT1Contra.approve(dexContra.address, 10000);
+    const approve2 = await TT2Contra.approve(dexContra.address, 10000);
+
+    const _init = await dexContra.initPool(TT1Contra.address, 5000, TT2Contra.address, 5000);
+    console.log("The lp amount now is", await dexContra.balanceOf(guy.address));
 }
 
 const runMain = async () => {

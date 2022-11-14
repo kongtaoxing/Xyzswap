@@ -19,6 +19,7 @@ interface Erc20Func {
 contract Xyzswap is ERC20 {
 
     address owner;
+    uint256 lpAmount;
 
     error notApproved();
     error notOwner();
@@ -37,9 +38,11 @@ contract Xyzswap is ERC20 {
     }
 
     function initPool(address _token1, uint256 _amount1, address _token2, uint256 _amount2) public {
-        if(Erc20Func(_token1).allowance(msg.sender, address(this)) < _amount1){
-
+        if(Erc20Func(_token1).allowance(msg.sender, address(this)) < _amount1 || Erc20Func(_token2).allowance(msg.sender, address(this)) < _amount2){
+            revert notApproved();
         }
+        lpAmount = _amount1 * _amount2;
+        _mint(msg.sender, lpAmount);
     }
 
     /******************************************************************************************************
