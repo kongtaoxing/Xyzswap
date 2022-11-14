@@ -29,6 +29,9 @@ contract Xyzswap is ERC20 {
     error sigAlreadyUsed();
     error invalidAmount();
 
+    //event for LP
+    event InitPool(address indexed _token1, uint256 _amount1, address indexed _token2, uint256 _amount2);
+
     // events for owner
     event ChangeOwner(address indexed newOwner);
 
@@ -42,7 +45,21 @@ contract Xyzswap is ERC20 {
             revert notApproved();
         }
         lpAmount = _amount1 * _amount2;
+        Erc20Func(_token1).transfer(address(this), _amount1);
+        Erc20Func(_token2).transfer(address(this), _amount2);
         _mint(msg.sender, lpAmount);
+    }
+
+    function addLiquid(address _token1, uint256 amount) public {
+
+    }
+
+    function removeLiquid() public {
+
+    }
+
+    function swap() public {
+
     }
 
     /******************************************************************************************************
