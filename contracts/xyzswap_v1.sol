@@ -40,13 +40,18 @@ contract Xyzswap is ERC20 {
     // events for owner
     event ChangeOwner(address indexed newOwner);
 
-    constructor(address _token1, address _token2, uint256 _fee) ERC20("Xyzswap Liquid Pair", "XYZLP") {
+    constructor(address _token1, address _token2) ERC20("Xyzswap Liquid Pair", "XYZLP") {
         owner = msg.sender;
         token1 = _token1;
         token2 = _token2;
-        fee = _fee;
         console.log("LP has been deployed!");
     }
+
+    /******************************************************************************************************
+    *                                                                                                     *
+    *                                       User's Function                                               *
+    *                                                                                                     *
+    *******************************************************************************************************/
 
     function addLiquid(uint256 _amount1, uint256 _amount2) public {
         if(Erc20Func(token1).allowance(msg.sender, address(this)) < _amount1 || Erc20Func(token2).allowance(msg.sender, address(this)) < _amount2){
@@ -73,11 +78,17 @@ contract Xyzswap is ERC20 {
     }
 
     function swap(address _token, uint256 _amount) public {
+        if(Erc20Func(_token).allowance(msg.sender, address(this)) < _amount) {
+            revert notApproved();
+        }
         address _other = (_token == token1 ? token1 : token2);
-
+        Erc20Func(_token).transfer(address(this), _amount);
+        uint256 _val = Erc20Func(_token).balanceOf(address(this)) + _amount;
+        uint256 _valOther = Erc20Func(_other).balanceOf(address(this)) - lpAmount / _val;
+        Erc20Func(_other).transferFrom(address(this), msg.sender, _valOther);
         emit Swap(_token, _amount);
     }
-
+    
     /******************************************************************************************************
     *                                                                                                     *
     *                                      Owner's Function                                               *
@@ -86,6 +97,10 @@ contract Xyzswap is ERC20 {
 
     function setFee(uint256 _fee) public onlyOwner {
         fee = _fee;
+    }
+
+    function getFees() public view returns (uint256) {
+        return fee;
     }
 
     function withdraw() onlyOwner public {
