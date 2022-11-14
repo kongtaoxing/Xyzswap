@@ -18,6 +18,9 @@ const main = async () => {
 
     const _init = await dexContra.addliquid(TT1Contra.address, 5000, TT2Contra.address, 5000);
     console.log("The lp amount now is", await dexContra.balanceOf(guy.address));
+
+    const _swap = await dexContra.swap(TT1Contra.address, 1);
+    console.log("amount 1:", await TT1Contra.balanceOf(guy.address), "amount 2:", TT2Contra.balanceOf(guy.address));
 }
 
 const runMain = async () => {
