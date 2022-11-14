@@ -58,8 +58,8 @@ contract Xyzswap is ERC20 {
             revert notApproved();
         }
         lpAmount += _amount1 * _amount2;
-        Erc20Func(token1).transfer(address(this), _amount1);
-        Erc20Func(token2).transfer(address(this), _amount2);
+        Erc20Func(token1).transferFrom(msg.sender, address(this), _amount1);
+        Erc20Func(token2).transferFrom(msg.sender, address(this), _amount2);
         _mint(msg.sender, lpAmount);
 
         emit AddLiquid(token1, _amount1, token2, _amount2);
@@ -78,14 +78,21 @@ contract Xyzswap is ERC20 {
     }
 
     function swap(address _token, uint256 _amount) public {
+        if(Erc20Func(_token).balanceOf(msg.sender) < _amount) {
+            revert insufficientBalance();
+        }
         if(Erc20Func(_token).allowance(msg.sender, address(this)) < _amount) {
             revert notApproved();
         }
         address _other = (_token == token1 ? token1 : token2);
-        Erc20Func(_token).transfer(address(this), _amount);
+        Erc20Func(_token).transferFrom(msg.sender, address(this), _amount);
+        console.log("Swap in successfully!");
         uint256 _val = Erc20Func(_token).balanceOf(address(this)) + _amount;
+        console.log("amount after swap in:", _val);
         uint256 _valOther = Erc20Func(_other).balanceOf(address(this)) - lpAmount / _val;
-        Erc20Func(_other).transferFrom(address(this), msg.sender, _valOther);
+        console.log("Swap out value:", _valOther);
+        Erc20Func(_other).transfer(msg.sender, _valOther);
+        lpAmount = _val * _valOther;  // Update lpAmount if something goes wrong
         emit Swap(_token, _amount);
     }
     
