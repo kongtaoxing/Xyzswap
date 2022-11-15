@@ -70,7 +70,7 @@ contract Xyzswap is ERC20 {
         _amount *= 10 ** 18;
         uint256 _bal1 = Erc20Func(token1).balanceOf(address(this));
         uint256 _bal2 = Erc20Func(token2).balanceOf(address(this));
-        uint256 _val1 = sqrt(_amount * _bal1 / _bal2);
+        uint256 _val1 = Math.sqrt(_amount * _bal1 / _bal2);
         uint256 _val2 = _amount / _val1;
         Erc20Func(token1).transferFrom(address(this), msg.sender, _val1);
         Erc20Func(token2).transferFrom(address(this), msg.sender, _val2);
