@@ -3,6 +3,7 @@ pragma solidity 0.8.17;
 
 import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/utils/math/Math.sol";
 
 interface Erc20Func {
     function name() external view returns (string memory);
@@ -57,7 +58,7 @@ contract Xyzswap is ERC20 {
         if(Erc20Func(token1).allowance(msg.sender, address(this)) < _amount1 || Erc20Func(token2).allowance(msg.sender, address(this)) < _amount2){
             revert notApproved();
         }
-        lpAmount += _amount1 * _amount2;
+        lpAmount += _amount1 * _amount2 / (10 ** 18);
         Erc20Func(token1).transferFrom(msg.sender, address(this), _amount1);
         Erc20Func(token2).transferFrom(msg.sender, address(this), _amount2);
         _mint(msg.sender, lpAmount);
@@ -66,13 +67,14 @@ contract Xyzswap is ERC20 {
     }
 
     function removeLiquid(uint256 _amount) public {
+        _amount *= 10 ** 18;
         uint256 _bal1 = Erc20Func(token1).balanceOf(address(this));
         uint256 _bal2 = Erc20Func(token2).balanceOf(address(this));
-        uint256 _val1 = _amount * _bal1 / (_bal1 + _bal2);
-        uint256 _val2 = _amount - _val1;
+        uint256 _val1 = sqrt(_amount * _bal1 / _bal2);
+        uint256 _val2 = _amount / _val1;
         Erc20Func(token1).transferFrom(address(this), msg.sender, _val1);
         Erc20Func(token2).transferFrom(address(this), msg.sender, _val2);
-        _burn(msg.sender, _amount);
+        _burn(msg.sender, _amount / (10 ** 18));
 
         emit RemoveLiquid(_amount);
     }
@@ -86,13 +88,10 @@ contract Xyzswap is ERC20 {
         }
         address _other = (_token == token1 ? token2 : token1);
         Erc20Func(_token).transferFrom(msg.sender, address(this), _amount);
-        console.log("Swap in successfully!");
         uint256 _val = Erc20Func(_token).balanceOf(address(this));
-        console.log("amount after swap in:", _val);
-        uint256 _valOther = Erc20Func(_other).balanceOf(address(this)) - lpAmount / _val;
-        console.log("Swap out value:", _valOther);
+        uint256 _valOther = Erc20Func(_other).balanceOf(address(this)) - (lpAmount * 10 ** 18) / _val;
         Erc20Func(_other).transfer(msg.sender, _valOther);
-        lpAmount = _val * _valOther;  // Update lpAmount if something goes wrong
+        lpAmount = _val * _valOther /(10 ** 18);  // Update lpAmount if slip point is high
 
         emit Swap(_token, _amount);
     }

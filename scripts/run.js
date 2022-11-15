@@ -18,10 +18,11 @@ const main = async () => {
     const approve2 = await TT2Contra.approve(dexContra.address, val.parseEther('10000'));
 
     const _init = await dexContra.addLiquid(val.parseEther('5000'), val.parseEther('5000'));
-    console.log("The lp amount now is", await dexContra.balanceOf(guy.address));
+    console.log("The lp amount now is", val.formatEther((await dexContra.balanceOf(guy.address))));
 
-    const _swap = await dexContra.swap(TT1Contra.address, val.parseEther('100'));
-    console.log("amount 1:", await TT1Contra.balanceOf(guy.address), "amount 2:", await TT2Contra.balanceOf(guy.address));
+    const _swap = await dexContra.swap(TT1Contra.address, val.parseEther('1000'));
+    console.log("amount 1:", val.formatEther(await TT1Contra.balanceOf(guy.address)),
+     "amount 2:", val.formatEther(await TT2Contra.balanceOf(guy.address)));
 }
 
 const runMain = async () => {
