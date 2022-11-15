@@ -1,5 +1,6 @@
 const main = async () => {
     const [guy, randomGuy] = await hre.ethers.getSigners();
+    const val = hre.ethers.utils;
 
     const TT1Fac = await hre.ethers.getContractFactory("TestToken1");
     const TT1Contra = await TT1Fac.deploy();
@@ -13,13 +14,13 @@ const main = async () => {
     const dexContra = await dexFac.deploy(TT1Contra.address, TT2Contra.address);
     console.log("Dex has been deployed to", dexContra.address);
 
-    const approve1 = await TT1Contra.approve(dexContra.address, 10000);
-    const approve2 = await TT2Contra.approve(dexContra.address, 10000);
+    const approve1 = await TT1Contra.approve(dexContra.address, val.parseEther('10000'));
+    const approve2 = await TT2Contra.approve(dexContra.address, val.parseEther('10000'));
 
-    const _init = await dexContra.addLiquid(5000, 5000);
+    const _init = await dexContra.addLiquid(val.parseEther('5000'), val.parseEther('5000'));
     console.log("The lp amount now is", await dexContra.balanceOf(guy.address));
 
-    const _swap = await dexContra.swap(TT1Contra.address, 1000);
+    const _swap = await dexContra.swap(TT1Contra.address, val.parseEther('100'));
     console.log("amount 1:", await TT1Contra.balanceOf(guy.address), "amount 2:", await TT2Contra.balanceOf(guy.address));
 }
 
