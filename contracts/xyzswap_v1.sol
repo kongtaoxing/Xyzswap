@@ -20,7 +20,7 @@ interface Erc20Func {
 contract Xyzswap is ERC20 {
 
     address owner;
-    uint256 lpAmount;
+    uint256  public lpAmount;
     uint256 fee;
     address token1;
     address token2;
@@ -67,14 +67,17 @@ contract Xyzswap is ERC20 {
     }
 
     function removeLiquid(uint256 _amount) public {
-        _amount *= 10 ** 18;
+        if(allowance(msg.sender, address(this)) < _amount) {
+            revert notApproved();
+        }
+        _burn(msg.sender, _amount);
         uint256 _bal1 = Erc20Func(token1).balanceOf(address(this));
         uint256 _bal2 = Erc20Func(token2).balanceOf(address(this));
-        uint256 _val1 = Math.sqrt(_amount * _bal1 / _bal2);
-        uint256 _val2 = _amount / _val1;
-        Erc20Func(token1).transferFrom(address(this), msg.sender, _val1);
-        Erc20Func(token2).transferFrom(address(this), msg.sender, _val2);
-        _burn(msg.sender, _amount / (10 ** 18));
+        uint256 _val1 = Math.sqrt((_amount * 10 ** 18 * _bal1) / _bal2);
+        uint256 _val2 = (_amount * 10 ** 18) / _val1;
+        Erc20Func(token1).transfer(msg.sender, _val1);
+        Erc20Func(token2).transfer(msg.sender, _val2);
+        lpAmount -= _amount;
 
         emit RemoveLiquid(_amount);
     }
@@ -88,10 +91,10 @@ contract Xyzswap is ERC20 {
         }
         address _other = (_token == token1 ? token2 : token1);
         Erc20Func(_token).transferFrom(msg.sender, address(this), _amount);
-        uint256 _val = Erc20Func(_token).balanceOf(address(this));
+        uint256 _val = Erc20Func(_token).balanceOf(address(this)) + _amount;
         uint256 _valOther = Erc20Func(_other).balanceOf(address(this)) - (lpAmount * 10 ** 18) / _val;
         Erc20Func(_other).transfer(msg.sender, _valOther);
-        lpAmount = _val * _valOther /(10 ** 18);  // Update lpAmount if slip point is high
+        lpAmount = _val * ((lpAmount * 10 ** 18) / _val) /(10 ** 18);  // Update lpAmount if slip point is high
 
         emit Swap(_token, _amount);
     }
