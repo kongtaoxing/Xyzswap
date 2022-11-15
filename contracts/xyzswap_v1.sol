@@ -84,15 +84,16 @@ contract Xyzswap is ERC20 {
         if(Erc20Func(_token).allowance(msg.sender, address(this)) < _amount) {
             revert notApproved();
         }
-        address _other = (_token == token1 ? token1 : token2);
+        address _other = (_token == token1 ? token2 : token1);
         Erc20Func(_token).transferFrom(msg.sender, address(this), _amount);
         console.log("Swap in successfully!");
-        uint256 _val = Erc20Func(_token).balanceOf(address(this)) + _amount;
+        uint256 _val = Erc20Func(_token).balanceOf(address(this));
         console.log("amount after swap in:", _val);
         uint256 _valOther = Erc20Func(_other).balanceOf(address(this)) - lpAmount / _val;
         console.log("Swap out value:", _valOther);
         Erc20Func(_other).transfer(msg.sender, _valOther);
         lpAmount = _val * _valOther;  // Update lpAmount if something goes wrong
+
         emit Swap(_token, _amount);
     }
     
