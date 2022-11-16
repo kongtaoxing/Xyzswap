@@ -71,12 +71,14 @@ contract Xyzswap is ERC20 {
             revert notApproved();
         }
         _burn(msg.sender, _amount);
+        // $(valA-A)*(valB-B)=lpAmount-\_amount$
+        // $\frac{A}{B}=\frac{valA}{valB}$
         uint256 _bal1 = Erc20Func(token1).balanceOf(address(this));
         uint256 _bal2 = Erc20Func(token2).balanceOf(address(this));
-        uint256 _val1 = Math.sqrt((_amount * 10 ** 18 * _bal1) / _bal2);
-        uint256 _val2 = (_amount * 10 ** 18) / _val1;
-        Erc20Func(token1).transfer(msg.sender, _val1);
-        Erc20Func(token2).transfer(msg.sender, _val2);
+        uint256 _valB = _bal2 - Math.sqrt((_bal2 * (lpAmount - _amount) * 10 ** 18) / _bal1);
+        uint256 _valA = (_bal1 * _valB) / _bal2;
+        Erc20Func(token1).transfer(msg.sender, _valA);
+        Erc20Func(token2).transfer(msg.sender, _valB);
         lpAmount -= _amount;
 
         emit RemoveLiquid(_amount);
