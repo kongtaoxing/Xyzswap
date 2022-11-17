@@ -19,6 +19,8 @@ interface Erc20Func {
 
 contract Xyzswap is ERC20 {
 
+    using SafeMath for uint256;
+
     address owner;
     uint256 lpAmount;
     uint256 public fee;
@@ -112,13 +114,13 @@ contract Xyzswap is ERC20 {
         uint256 _balA = Erc20Func(tokenA).balanceOf(address(this));
         uint256 _balB = Erc20Func(tokenB).balanceOf(address(this));
         // uint256 _valB = _balB - Math.sqrt((_balB * (lpAmount - _amount) * 10 ** 18) / _balA);
-        uint256 _valB = SafeMath.sub(_balB, Math.sqrt((SafeMath.div(SafeMath.mul(_balB, (SafeMath.sub(lpAmount, _amount)) * 10 ** 18), _balA))));
+        uint256 _valB = _balB.sub(Math.sqrt((_balB.mul(lpAmount.sub(_amount)) * 10 ** 18).div(_balA)));
         // uint256 _valA = (_balA * _valB) / _balB;
-        uint256 _valA = SafeMath.div(SafeMath.mul(_balA, _valB), _balB);
+        uint256 _valA = (_balA.mul(_valB)).div(_balB);
         Erc20Func(tokenA).transfer(msg.sender, _valA);
         Erc20Func(tokenB).transfer(msg.sender, _valB);
         // lpAmount -= _amount;
-        lpAmount = SafeMath.sub(lpAmount, _amount);
+        lpAmount = lpAmount.sub(_amount);
 
         emit RemoveLiquid(_amount);
     }
@@ -133,11 +135,11 @@ contract Xyzswap is ERC20 {
         address _other = (_token == tokenA ? tokenB : tokenA);
         Erc20Func(_token).transferFrom(msg.sender, address(this), _amount);
         // uint256 _val = Erc20Func(_token).balanceOf(address(this)) + _amount;
-        uint256 _val = SafeMath.add(Erc20Func(_token).balanceOf(address(this)), _amount);
+        uint256 _val = Erc20Func(_token).balanceOf(address(this)).add(_amount);
         // uint256 _valOther = Erc20Func(_other).balanceOf(address(this)) - (lpAmount * 10 ** 18) / _val;
-        uint256 _valOther = SafeMath.sub(Erc20Func(_other).balanceOf(address(this)), SafeMath.div(lpAmount * 10 ** 18, _val));
+        uint256 _valOther = Erc20Func(_other).balanceOf(address(this)).sub((lpAmount * 10 ** 18).div(_val));
         Erc20Func(_other).transfer(msg.sender, _valOther * (100 - fee) / 100);
-        lpAmount = _val * ((lpAmount * 10 ** 18) / _val) /(10 ** 18);  // Update lpAmount if slip point is high
+        lpAmount = _val.mul((lpAmount * 10 ** 18).div(_val)) /(10 ** 18);  // Update lpAmount if slip point is high
 
         emit Swap(_token, _amount);
     }
