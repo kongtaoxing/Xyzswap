@@ -17,7 +17,7 @@ interface Erc20Func {
     function allowance(address _owner, address _spender) external view returns (uint256 remaining);
 }
 
-contract Xyzswap is ERC20 {
+contract XyzswapV2 is ERC20 {
 
     address owner;
     uint256 lpAmount;
