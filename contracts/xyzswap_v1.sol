@@ -95,7 +95,7 @@ contract Xyzswap is ERC20 {
         Erc20Func(_token).transferFrom(msg.sender, address(this), _amount);
         uint256 _val = Erc20Func(_token).balanceOf(address(this)) + _amount;
         uint256 _valOther = Erc20Func(_other).balanceOf(address(this)) - (lpAmount * 10 ** 18) / _val;
-        Erc20Func(_other).transfer(msg.sender, _valOther * (1 - fee / 100));
+        Erc20Func(_other).transfer(msg.sender, _valOther * (100 - fee) / 100);
         lpAmount = _val * ((lpAmount * 10 ** 18) / _val) /(10 ** 18);  // Update lpAmount if slip point is high
 
         emit Swap(_token, _amount);
